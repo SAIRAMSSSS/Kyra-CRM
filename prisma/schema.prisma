@@ -1,0 +1,282 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         String    // "GENERAL_MANAGER", "DIGITAL_HEAD", "CRM_EXECUTIVE", "SITE_MANAGER", "TELECALLER"
+  status       String    @default("ACTIVE") // "ACTIVE", "INACTIVE", "SUSPENDED"
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile                 EmployeeProfile?
+  createdLeads            Lead[]                  @relation("LeadCreator")
+  assignedCrmLeads        Lead[]                  @relation("LeadCrm")
+  assignedTelecallerLeads Lead[]                  @relation("LeadTelecaller")
+  assignedSiteLeads       Lead[]                  @relation("LeadSiteManager")
+  campaignsCreated        Campaign[]
+  callReports             CallReport[]
+  assignedSiteVisits      SiteVisit[]             @relation("SiteVisitManager")
+  createdSiteVisits       SiteVisit[]             @relation("SiteVisitCreator")
+  tasksAssigned           Task[]                  @relation("TaskAssignedTo")
+  tasksCreated            Task[]                  @relation("TaskCreatedBy")
+  notifications           Notification[]
+  auditLogs               AuditLog[]
+  assignedLeadHistory     LeadAssignmentHistory[] @relation("AssignedToUser")
+}
+
+model EmployeeProfile {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode String    @unique
+  department   String
+  designation  String
+  phone        String?
+  joiningDate  DateTime?
+  status       String    @default("Active")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Customer {
+  id               String      @id @default(cuid())
+  name             String
+  phone            String      @unique
+  altPhone         String?
+  email            String?
+  location         String
+  address          String?
+  profession       String?     // e.g. "Software Engineer", "Doctor", "Business Owner"
+  preferredContact String?     @default("Phone")
+  notes            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  leads      Lead[]
+  siteVisits SiteVisit[]
+}
+
+model Site {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  location    String
+  address     String?
+  description String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  leads      Lead[]
+  siteVisits SiteVisit[]
+}
+
+model LeadSource {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  leads     Lead[]
+  campaigns Campaign[]
+}
+
+model Campaign {
+  id                 String      @id @default(cuid())
+  name               String
+  description        String?
+  contentTitle       String
+  contentType        String      // "Image", "Video", "Poster", "Social media post", "Advertisement", "Other"
+  platform           String      // "Meta", "Google Ads", "Instagram", "Print", "Direct", "Other"
+  startDate          DateTime?
+  endDate            DateTime?
+  status             String      @default("Active") // "Draft", "Active", "Paused", "Completed"
+  leadSourceId       String?
+  leadSource         LeadSource? @relation(fields: [leadSourceId], references: [id])
+  notes              String?
+  mediaAttachmentUrl String?
+  createdById        String
+  createdBy          User        @relation(fields: [createdById], references: [id])
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  leads Lead[]
+}
+
+model Lead {
+  id                   String      @id @default(cuid())
+  displayId            String      @unique // e.g. "KYRA-LD-1001"
+  enquiryNo            String?     // e.g. "E01", "E02" as referenced in telecalling sheet
+  customerId           String
+  customer             Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  siteId               String?
+  site                 Site?       @relation(fields: [siteId], references: [id])
+  leadSourceId         String?
+  leadSource           LeadSource? @relation(fields: [leadSourceId], references: [id])
+  campaignId           String?
+  campaign             Campaign?   @relation(fields: [campaignId], references: [id])
+  lifecycleStatus      String      @default("NEW") // "NEW", "ASSIGNED", "IN_PROGRESS", "CONTACTED", "FOLLOW_UP_REQUIRED", "QUALIFIED", "SITE_VISIT_SCHEDULED", "SITE_VISIT_COMPLETED", "CONVERTED", "CLOSED", "ARCHIVED"
+  callFeedback         String?     // "CONFIRM", "CALL_BACK", "NOT_INTERESTED", "NOT_CONNECTED", "CALL_BUSY", "SWITCHED_OFF", "OTHERS"
+  priority             String      @default("MEDIUM") // "LOW", "MEDIUM", "HIGH", "URGENT"
+  preferredTime        String?     // e.g. "10:30 AM", "Morning", "Evening"
+  metaLeadId           String?
+  metaPlatform         String?     // "Facebook" or "Insta"
+  metaAdName           String?
+  metaCampaignName     String?
+  createdById          String
+  createdBy            User        @relation("LeadCreator", fields: [createdById], references: [id])
+  assignedCrmId        String?
+  assignedCrm          User?       @relation("LeadCrm", fields: [assignedCrmId], references: [id])
+  assignedTelecallerId String?
+  assignedTelecaller   User?       @relation("LeadTelecaller", fields: [assignedTelecallerId], references: [id])
+  assignedSiteId       String?
+  assignedSiteManager  User?       @relation("LeadSiteManager", fields: [assignedSiteId], references: [id])
+  lastContactedAt      DateTime?
+  nextFollowUpAt       DateTime?
+  notes                String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  callReports         CallReport[]
+  siteVisits          SiteVisit[]
+  assignmentHistories LeadAssignmentHistory[]
+}
+
+model LeadAssignmentHistory {
+  id           String   @id @default(cuid())
+  leadId       String
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  fromUserId   String?
+  toUserId     String
+  toUser       User     @relation("AssignedToUser", fields: [toUserId], references: [id])
+  assignedById String
+  assignedAt   DateTime @default(now())
+  notes        String?
+}
+
+model CallReport {
+  id                  String    @id @default(cuid())
+  leadId              String
+  lead                Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  telecallerId        String
+  telecaller          User      @relation(fields: [telecallerId], references: [id])
+  calledAt            DateTime  @default(now())
+  outcome             String    // "Answered", "Busy", "Ringing Unanswered", "Switched Off", "Invalid Number", "Attempted"
+  feedback            String    // "NOT_INTERESTED", "NOT_CONNECTED", "CALL_BACK", "INTERESTED"
+  notes               String?
+  notInterestedReason String?
+  nextFollowUpDate    DateTime?
+  siteVisitFixed      Boolean?  // true if fixed, false if not fixed, null if N/A
+  createdAt           DateTime  @default(now())
+}
+
+model SiteVisit {
+  id                    String    @id @default(cuid())
+  displayId             String    @unique // e.g. "KYRA-SV-2001"
+  leadId                String
+  lead                  Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  customerId            String
+  customer              Customer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  siteId                String
+  site                  Site      @relation(fields: [siteId], references: [id])
+  scheduledDate         DateTime
+  scheduledTime         String    // e.g. "10:30 AM"
+  status                String    @default("SCHEDULED") // "NOT_FIXED", "SCHEDULED", "CONFIRMED", "RESCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"
+  assignedSiteManagerId String?
+  assignedSiteManager   User?     @relation("SiteVisitManager", fields: [assignedSiteManagerId], references: [id])
+  createdById           String
+  createdBy             User      @relation("SiteVisitCreator", fields: [createdById], references: [id])
+  visitRemarks          String?
+  cancellationReason    String?
+  completionNotes       String?
+  completedAt           DateTime?
+  rescheduleHistory     String?   // JSON formatted history
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Task {
+  id                String    @id @default(cuid())
+  displayId         String    @unique // e.g. "KYRA-TSK-3001"
+  title             String
+  description       String?
+  assignedToId      String
+  assignedTo        User      @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  createdById       String
+  createdBy         User      @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  category          String    @default("General") // "Lead Followup", "Site Visit Coordination", "Promotional Content", "Customer Verification", "Administrative", "General"
+  priority          String    @default("MEDIUM") // "LOW", "MEDIUM", "HIGH", "URGENT"
+  dueDate           DateTime?
+  status            String    @default("TODO") // "TODO", "IN_PROGRESS", "ON_HOLD", "COMPLETED", "CANCELLED"
+  completionNotes   String?
+  relatedEntityType String?
+  relatedEntityId   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // "LEAD_ASSIGNED", "LEAD_REASSIGNED", "TASK_ASSIGNED", "TASK_OVERDUE", "SITE_VISIT_SCHEDULED", "SITE_VISIT_RESCHEDULED", "SITE_VISIT_CANCELLED", "FOLLOW_UP_DUE", "STATUS_CHANGE"
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  linkUrl   String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String   // "LOGIN", "LOGOUT", "LEAD_CREATED", "LEAD_UPDATED", "LEAD_ASSIGNED", "LEAD_IMPORTED", "CALL_LOGGED", "SITE_VISIT_SCHEDULED", "SITE_VISIT_UPDATED", "TASK_CREATED", "TASK_UPDATED", "EMPLOYEE_CREATED", "EMPLOYEE_UPDATED", "SETTINGS_UPDATED", "META_LEAD_INGESTED"
+  entityType String   // "USER", "LEAD", "CUSTOMER", "CALL_REPORT", "SITE_VISIT", "TASK", "CAMPAIGN", "SITE", "AUTH", "META_INTEGRATION"
+  entityId   String?
+  details    String?  // JSON string
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+model MetaLeadLog {
+  id           String   @id @default(cuid())
+  metaLeadId   String?
+  platform     String   @default("Facebook") // "Facebook" or "Insta"
+  campaignName String?
+  adName       String?
+  formName     String?
+  customerName String
+  phone        String
+  place        String?
+  profession   String?
+  status       String   @default("SUCCESS") // "SUCCESS", "DUPLICATE", "ERROR"
+  assignedToId String?
+  leadId       String?
+  rawPayload   String?
+  createdAt    DateTime @default(now())
+}
+
+model MetaIntegrationConfig {
+  id              String    @id @default("default")
+  isEnabled       Boolean   @default(true)
+  webhookUrl      String?   @default("/api/integrations/meta")
+  verifyToken     String?   @default("kyra_meta_leads_webhook_token_2026")
+  adAccountId     String?   @default("act_849201948201")
+  pageAccessToken String?   @default("EAAB...kyra_token")
+  autoAssignRole  String    @default("TELECALLER") // Round-robin to telecallers
+  lastSyncAt      DateTime?
+  updatedAt       DateTime  @updatedAt
+}
+

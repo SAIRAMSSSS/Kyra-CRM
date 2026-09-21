@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kyra_crm_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=kyra-enterprise-crm-super-secure-jwt-secret-key-production-2026
+      - NEXT_PUBLIC_APP_NAME=KYRA CRM
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    volumes:
+      - crm_data:/app/prisma
+
+volumes:
+  crm_data:
