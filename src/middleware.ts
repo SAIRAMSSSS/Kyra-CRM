@@ -6,6 +6,7 @@ export function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get("kyra_session")?.value;
 
   const isAuthPage = pathname.startsWith("/login");
+  const isPublicWebhook = pathname.startsWith("/api/integrations/meta");
   const isApiAuth = pathname.startsWith("/api/auth/login");
   const isPublicAsset =
     pathname.startsWith("/_next") ||
@@ -13,7 +14,7 @@ export function middleware(request: NextRequest) {
     pathname.includes("favicon.ico") ||
     pathname.includes(".");
 
-  if (isPublicAsset || isApiAuth) {
+  if (isPublicAsset || isApiAuth || isPublicWebhook) {
     return NextResponse.next();
   }
 
@@ -22,8 +23,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // If not logged in and visiting protected page, redirect to login
+  // If not logged in and visiting protected page/endpoint
   if (!isAuthPage && !sessionCookie) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
