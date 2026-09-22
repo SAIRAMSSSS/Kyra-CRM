@@ -1,8 +1,13 @@
 const assert = require('assert');
-const { PrismaClient } = require('@prisma/client');
+const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:' + path.join(process.cwd(), 'prisma', 'dev.db');
+}
+
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "kyra-enterprise-crm-super-secure-jwt-secret-key-production-2026";
 
