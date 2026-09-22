@@ -18,13 +18,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If already logged in and visiting login page, redirect to home
-  if (isAuthPage && sessionCookie) {
-    return NextResponse.redirect(new URL("/", request.url));
+  // Always allow auth pages (login) to render cleanly without redirect loops
+  if (isAuthPage) {
+    return NextResponse.next();
   }
 
   // If not logged in and visiting protected page/endpoint
-  if (!isAuthPage && !sessionCookie) {
+  if (!sessionCookie || sessionCookie.trim() === "") {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

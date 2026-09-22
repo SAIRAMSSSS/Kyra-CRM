@@ -62,8 +62,17 @@ async function main() {
       role: 'SITE_MANAGER',
       code: 'KYRA-SM-001',
       dept: 'Site Operations & Logistics',
-      desig: 'Regional Site Manager',
+      desig: 'Regional Site Manager (Pollachi)',
       phone: '+91 98401 11004',
+    },
+    {
+      email: 'site2@kyra.com',
+      name: 'Deepa Sundaram',
+      role: 'SITE_MANAGER',
+      code: 'KYRA-SM-002',
+      dept: 'Site Operations & Logistics',
+      desig: 'Site Operations Lead (Coimbatore)',
+      phone: '+91 98401 11007',
     },
     {
       email: 'telecaller1@kyra.com',
@@ -82,6 +91,33 @@ async function main() {
       dept: 'Telecalling Operations',
       desig: 'Customer Relations Associate',
       phone: '+91 98401 11006',
+    },
+    {
+      email: 'telecaller3@kyra.com',
+      name: 'Divya Ramesh',
+      role: 'TELECALLER',
+      code: 'KYRA-TC-003',
+      dept: 'Telecalling Operations',
+      desig: 'Outbound Specialist',
+      phone: '+91 98401 11008',
+    },
+    {
+      email: 'telecaller4@kyra.com',
+      name: 'Vigneshwaran K',
+      role: 'TELECALLER',
+      code: 'KYRA-TC-004',
+      dept: 'Telecalling Operations',
+      desig: 'Lead Qualification Specialist',
+      phone: '+91 98401 11009',
+    },
+    {
+      email: 'telecaller5@kyra.com',
+      name: 'Ananya Swaminathan',
+      role: 'TELECALLER',
+      code: 'KYRA-TC-005',
+      dept: 'Telecalling Operations',
+      desig: 'Customer Engagement Associate',
+      phone: '+91 98401 11010',
     },
   ];
 
@@ -109,7 +145,7 @@ async function main() {
     createdUsers[u.email] = user;
   }
 
-  console.log('✅ Created 6 employee accounts with roles.');
+  console.log(`✅ Created ${usersData.length} employee accounts with roles.`);
 
   // 4. Create Project Sites
   const sitesData = [
@@ -717,13 +753,17 @@ async function main() {
   });
 
   console.log('\n🚀 Database seeding completed successfully!');
-  console.log('\n🔑 Demo Employee Credentials for testing (Password: Password123!):');
-  console.log('1. General Manager:   gm@kyra.com');
-  console.log('2. Digital Head:       digital@kyra.com');
-  console.log('3. CRM Executive:      crm@kyra.com');
-  console.log('4. Site Manager:       site@kyra.com');
-  console.log('5. Telecaller 1:       telecaller1@kyra.com');
-  console.log('6. Telecaller 2:       telecaller2@kyra.com');
+  console.log('\n🔑 10 Employee Accounts Ready (Password: Password123!):');
+  console.log('1. General Manager:     gm@kyra.com');
+  console.log('2. Digital Head:         digital@kyra.com');
+  console.log('3. CRM Executive:        crm@kyra.com');
+  console.log('4. Site Manager (Pollachi): site@kyra.com');
+  console.log('5. Site Manager (Coimbatore): site2@kyra.com');
+  console.log('6. Telecaller 1:         telecaller1@kyra.com');
+  console.log('7. Telecaller 2:         telecaller2@kyra.com');
+  console.log('8. Telecaller 3:         telecaller3@kyra.com');
+  console.log('9. Telecaller 4:         telecaller4@kyra.com');
+  console.log('10. Telecaller 5:        telecaller5@kyra.com');
 }
 
 main()

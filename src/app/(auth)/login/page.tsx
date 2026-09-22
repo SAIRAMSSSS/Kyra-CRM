@@ -103,8 +103,7 @@ export default function LoginPage() {
         throw new Error(data.error || "Login failed. Please check credentials.");
       }
 
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

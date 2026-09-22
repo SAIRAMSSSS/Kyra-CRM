@@ -4,6 +4,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "KYRA CRM — Employee Operations Portal",
   description: "Internal business portal for marketing campaigns, lead intake, telecalling operations, and site visits.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
